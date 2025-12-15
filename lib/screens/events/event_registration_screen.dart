@@ -298,11 +298,3 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
     );
   }
 }
-// ================================
-// PART 4: TICKET, MY EVENTS, AND CREATE EVENT SCREENS
-// ================================
-
-// ================================
-// TICKET SCREEN WITH QR CODE
-// ================================
-

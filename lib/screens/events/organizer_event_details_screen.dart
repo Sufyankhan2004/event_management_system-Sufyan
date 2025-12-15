@@ -221,13 +221,3 @@ class _OrganizerEventDetailsScreenState extends State<OrganizerEventDetailsScree
     );
   }
 }
-
-
-// ================================
-// PART 6: PROFILE, SEARCH, NOTIFICATIONS, AND CATEGORY SCREENS
-// ================================
-
-// ================================
-// PROFILE SCREEN
-// ================================
-

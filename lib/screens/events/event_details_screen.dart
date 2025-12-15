@@ -529,8 +529,3 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 }
-
-// ================================
-// EVENT REGISTRATION SCREEN
-// ================================
-

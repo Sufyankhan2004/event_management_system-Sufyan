@@ -88,6 +88,3 @@ class _CategoryEventsScreenState extends State<CategoryEventsScreen> {
     );
   }
 }
-
-// ================================
-// END OF APPLICATION CODE

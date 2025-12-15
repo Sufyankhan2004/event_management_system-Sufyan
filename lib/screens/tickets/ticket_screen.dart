@@ -150,8 +150,6 @@ class _TicketScreenState extends State<TicketScreen> {
                       ),
                       const SizedBox(height: 24),
                       
-                    
-                      
                       // Ticket Code
                       Container(
                         padding: const EdgeInsets.symmetric(

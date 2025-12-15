@@ -370,11 +370,3 @@ class _MyEventsScreenState extends State<MyEventsScreen>
     );
   }
 }
-// ================================
-// PART 5: CREATE EVENT, QR SCANNER, AND PROFILE SCREENS
-// ================================
-
-// ================================
-// CREATE EVENT SCREEN
-// ================================
-
