@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
@@ -51,16 +52,50 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
+        const SnackBar(
+          content: Text('Account created successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
       );
       
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      
+      // Provide user-friendly error messages based on error type
+      String errorMessage;
+      if (e.message.toLowerCase().contains('already registered') || 
+          e.message.toLowerCase().contains('user already registered')) {
+        errorMessage = 'This email is already registered. Please sign in instead.';
+      } else if (e.message.toLowerCase().contains('invalid email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (e.message.toLowerCase().contains('password')) {
+        errorMessage = 'Password does not meet requirements. Please use a stronger password.';
+      } else if (e.message.toLowerCase().contains('network')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else {
+        errorMessage = 'Sign up failed. Please try again later.';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
+      // Handle any other unexpected errors
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign up failed: ${e.toString()}')),
+        const SnackBar(
+          content: Text('An unexpected error occurred. Please try again.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
