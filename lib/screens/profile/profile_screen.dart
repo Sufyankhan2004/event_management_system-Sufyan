@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/user_profile.dart';
-import '../auth/login_screen.dart';
+import '../../auth/login_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'favorites_screen.dart';
 

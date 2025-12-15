@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/app_theme.dart';
 import 'config/supabase_config.dart';
-import 'screens/auth/splash_screen.dart';
+import 'auth/splash_screen.dart';
 
 // ================================
 // MAIN FUNCTION

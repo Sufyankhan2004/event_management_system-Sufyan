@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../config/app_theme.dart';
-import '../../config/supabase_config.dart';
-import '../auth/login_screen.dart';
-import '../home/main_screen.dart';
+import '../config/app_theme.dart';
+import '../services/auth_service.dart';
+import 'login_screen.dart';
+import '../organizer/organizer_main_screen.dart';
+import '../attendee/attendee_main_screen.dart';
 
 // ================================
 // SPLASH SCREEN
@@ -18,6 +19,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
@@ -29,14 +32,27 @@ class _SplashScreenState extends State<SplashScreen> {
     
     if (!mounted) return;
     
-    final session = supabase.auth.currentSession;
+    Widget destination;
+    
+    if (_authService.isAuthenticated()) {
+      // Get user profile and route based on role
+      final userProfile = await _authService.getCurrentUserProfile();
+      
+      if (userProfile != null) {
+        if (userProfile.role == 'organizer') {
+          destination = const OrganizerMainScreen();
+        } else {
+          destination = const AttendeeMainScreen();
+        }
+      } else {
+        destination = const LoginScreen();
+      }
+    } else {
+      destination = const LoginScreen();
+    }
     
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => session == null 
-            ? const LoginScreen() 
-            : const MainScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => destination),
     );
   }
 

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../config/app_theme.dart';
-import '../../config/supabase_config.dart';
-import '../home/main_screen.dart';
+import '../config/app_theme.dart';
+import '../services/auth_service.dart';
+import '../organizer/organizer_main_screen.dart';
+import '../attendee/attendee_main_screen.dart';
 
 // ================================
 // SIGN UP SCREEN
@@ -22,9 +23,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _authService = AuthService();
   bool _isLoading = false;
   bool _isPasswordVisible = false;
-  String _selectedRole = 'user';
+  String _selectedRole = 'attendee';
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -32,30 +34,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final response = await supabase.auth.signUp(
+      final userProfile = await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        data: {
-          'full_name': _fullNameController.text.trim(),
-        },
+        fullName: _fullNameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        role: _selectedRole,
       );
       
-      if (response.user != null) {
-        // Update profile with additional data
-        await supabase.from('profiles').update({
-          'phone': _phoneController.text.trim(),
-          'role': _selectedRole,
-        }).eq('id', response.user!.id);
-      }
-      
       if (!mounted) return;
+      
+      if (userProfile == null) {
+        throw Exception('Failed to create account');
+      }
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account created successfully!')),
       );
+
+      // Navigate based on role
+      Widget destination;
+      if (userProfile.role == 'organizer') {
+        destination = const OrganizerMainScreen();
+      } else {
+        destination = const AttendeeMainScreen();
+      }
       
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainScreen()),
+        MaterialPageRoute(builder: (context) => destination),
       );
     } catch (e) {
       if (!mounted) return;
@@ -178,7 +184,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       prefixIcon: Icon(Icons.badge_outlined),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'user', child: Text('Attend Events')),
+                      DropdownMenuItem(value: 'attendee', child: Text('Attend Events')),
                       DropdownMenuItem(value: 'organizer', child: Text('Organize Events')),
                     ],
                     onChanged: (value) {
