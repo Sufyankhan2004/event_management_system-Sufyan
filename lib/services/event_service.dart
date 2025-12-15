@@ -57,7 +57,7 @@ class EventService {
   }
 
   // Get event by ID
-  Future<EventModel?> getEventById(String eventId) async {
+  Future<Map<String, dynamic>> getEventById(String eventId) async {
     try {
       final data = await supabase
           .from('events')
@@ -65,9 +65,9 @@ class EventService {
           .eq('id', eventId)
           .single();
       
-      return EventModel.fromJson(data);
+      return {'success': true, 'data': EventModel.fromJson(data)};
     } catch (e) {
-      return null;
+      return {'success': false, 'error': e.toString()};
     }
   }
 

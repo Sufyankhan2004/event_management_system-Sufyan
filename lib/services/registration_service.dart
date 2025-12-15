@@ -7,7 +7,7 @@ import '../models/event.dart';
 
 class RegistrationService {
   // Register for event
-  Future<String?> registerForEvent(String userId, String eventId) async {
+  Future<Map<String, dynamic>> registerForEvent(String userId, String eventId) async {
     try {
       // Check if already registered
       final existing = await supabase
@@ -18,7 +18,7 @@ class RegistrationService {
           .maybeSingle();
       
       if (existing != null) {
-        throw Exception('Already registered for this event');
+        return {'success': false, 'error': 'Already registered for this event'};
       }
 
       // Generate ticket code
@@ -39,9 +39,9 @@ class RegistrationService {
       // Update available seats
       await supabase.rpc('decrement_available_seats', params: {'event_id': eventId});
 
-      return response['ticket_code'];
+      return {'success': true, 'ticket_code': response['ticket_code']};
     } catch (e) {
-      return null;
+      return {'success': false, 'error': e.toString()};
     }
   }
 

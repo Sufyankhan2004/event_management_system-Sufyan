@@ -157,15 +157,6 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // Switch to events tab
-                            if (context.findAncestorStateOfType<_OrganizerDashboardScreenState>() != null) {
-                              // This would require parent state management
-                            }
-                          },
-                          child: const Text('View All'),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
