@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
+import '../../utils/auth_error_handler.dart';
 import '../home/main_screen.dart';
 
 // ================================
@@ -65,20 +66,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } on AuthException catch (e) {
       if (!mounted) return;
       
-      // Provide user-friendly error messages based on error type
-      String errorMessage;
-      if (e.message.toLowerCase().contains('already registered') || 
-          e.message.toLowerCase().contains('user already registered')) {
-        errorMessage = 'This email is already registered. Please sign in instead.';
-      } else if (e.message.toLowerCase().contains('invalid email')) {
-        errorMessage = 'Please enter a valid email address.';
-      } else if (e.message.toLowerCase().contains('password')) {
-        errorMessage = 'Password does not meet requirements. Please use a stronger password.';
-      } else if (e.message.toLowerCase().contains('network')) {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else {
-        errorMessage = 'Sign up failed. Please try again later.';
-      }
+      // Get user-friendly error message for signup
+      final errorMessage = AuthErrorHandler.getErrorMessage(e, isSignUp: true);
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

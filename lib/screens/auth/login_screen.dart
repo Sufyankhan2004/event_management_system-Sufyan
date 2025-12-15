@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
+import '../../utils/auth_error_handler.dart';
 import '../home/main_screen.dart';
 import 'signup_screen.dart';
 
@@ -44,17 +45,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthException catch (e) {
       if (!mounted) return;
       
-      // Provide user-friendly error messages based on error type
-      String errorMessage;
-      if (e.statusCode == '400' || e.message.toLowerCase().contains('invalid login credentials')) {
-        errorMessage = 'Invalid credentials. Please check your email and password.';
-      } else if (e.message.toLowerCase().contains('email not confirmed')) {
-        errorMessage = 'Please verify your email address before logging in.';
-      } else if (e.message.toLowerCase().contains('network')) {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else {
-        errorMessage = 'Login failed. Please try again later.';
-      }
+      // Get user-friendly error message
+      final errorMessage = AuthErrorHandler.getErrorMessage(e);
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
