@@ -26,7 +26,9 @@ class UserService {
           .from('profiles')
           .select()
           .eq('id', userId)
-          .single();
+          .maybeSingle();
+      
+      if (response == null) return null;
       return UserProfile.fromJson(response);
     } catch (e) {
       throw Exception('Failed to get user profile: ${e.toString()}');
