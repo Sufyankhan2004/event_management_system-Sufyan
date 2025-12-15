@@ -11,8 +11,12 @@ class AuthErrorHandler {
     final message = e.message.toLowerCase();
     
     // Check for invalid credentials
-    if (message.contains('invalid login credentials') || 
-        (e.statusCode != null && e.statusCode == '400')) {
+    if (message.contains('invalid login credentials')) {
+      return 'Invalid credentials. Please check your email and password.';
+    }
+    
+    // Also check status code for 400 errors which typically indicate invalid credentials
+    if (e.statusCode != null && e.statusCode == '400') {
       return 'Invalid credentials. Please check your email and password.';
     }
     
@@ -32,8 +36,10 @@ class AuthErrorHandler {
       return 'Please enter a valid email address.';
     }
     
-    // Check for password requirements
-    if (message.contains('password')) {
+    // Check for password requirements (more specific checks)
+    if (message.contains('password is too weak') || 
+        message.contains('password should be at least') ||
+        message.contains('password requirements')) {
       return 'Password does not meet requirements. Please use a stronger password.';
     }
     
