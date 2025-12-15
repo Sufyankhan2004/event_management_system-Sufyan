@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../config/app_theme.dart';
-import '../../config/supabase_config.dart';
-import '../home/main_screen.dart';
+import '../config/app_theme.dart';
+import '../services/auth_service.dart';
+import '../organizer/organizer_main_screen.dart';
+import '../attendee/attendee_main_screen.dart';
 import 'signup_screen.dart';
 
 // ================================
@@ -21,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _isLoading = false;
   bool _isPasswordVisible = false;
 
@@ -30,15 +32,27 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     
     try {
-      await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      final userProfile = await _authService.signIn(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
       
       if (!mounted) return;
       
+      if (userProfile == null) {
+        throw Exception('Failed to load user profile');
+      }
+
+      // Navigate based on role
+      Widget destination;
+      if (userProfile.role == 'organizer') {
+        destination = const OrganizerMainScreen();
+      } else {
+        destination = const AttendeeMainScreen();
+      }
+      
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainScreen()),
+        MaterialPageRoute(builder: (context) => destination),
       );
     } catch (e) {
       if (!mounted) return;
