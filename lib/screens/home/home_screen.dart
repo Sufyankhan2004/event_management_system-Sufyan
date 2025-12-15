@@ -5,6 +5,9 @@ import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
 import '../../models/user_profile.dart';
+import '../../services/event_service.dart';
+import '../../services/category_service.dart';
+import '../../services/user_service.dart';
 import '../../widgets/featured_event_card.dart';
 import '../../widgets/event_list_card.dart';
 import '../notifications/notifications_screen.dart';
@@ -27,6 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> _categories = [];
   bool _isLoading = true;
   UserProfile? _userProfile;
+  
+  final _eventService = EventService();
+  final _categoryService = CategoryService();
+  final _userService = UserService();
 
   @override
   void initState() {
@@ -39,44 +46,18 @@ class _HomeScreenState extends State<HomeScreen> {
     
     try {
       // Load user profile
-      final userId = supabase.auth.currentUser?.id;
-      if (userId != null) {
-        final profileData = await supabase
-            .from('profiles')
-            .select()
-            .eq('id', userId)
-            .single();
-        _userProfile = UserProfile.fromJson(profileData);
-      }
+      _userProfile = await _userService.getCurrentUserProfile();
 
       // Load categories
-      final categoriesData = await supabase
-          .from('event_categories')
-          .select('name')
-          .limit(10);
-      _categories = categoriesData.map((e) => e['name'] as String).toList();
+      _categories = await _categoryService.getCategoryNames();
 
       // Load featured events
-      final featuredData = await supabase
-          .from('events')
-          .select()
-          .eq('is_published', true)
-          .gte('event_date', DateTime.now().toIso8601String())
-          .order('created_at', ascending: false)
-          .limit(5);
+      _featuredEvents = await _eventService.getFeaturedEvents(limit: 5);
       
       // Load upcoming events
-      final upcomingData = await supabase
-          .from('events')
-          .select()
-          .eq('is_published', true)
-          .gte('event_date', DateTime.now().toIso8601String())
-          .order('event_date', ascending: true)
-          .limit(10);
+      _upcomingEvents = await _eventService.getUpcomingEvents(limit: 10);
 
       setState(() {
-        _featuredEvents = featuredData.map((e) => EventModel.fromJson(e)).toList();
-        _upcomingEvents = upcomingData.map((e) => EventModel.fromJson(e)).toList();
         _isLoading = false;
       });
     } catch (e) {

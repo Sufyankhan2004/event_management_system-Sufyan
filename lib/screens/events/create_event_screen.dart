@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
+import '../../services/event_service.dart';
+import '../../services/category_service.dart';
+import '../../services/organizer_statistics_service.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -29,6 +32,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   File? _selectedImage;
   bool _isLoading = false;
   List<String> _categories = [];
+  
+  final _eventService = EventService();
+  final _categoryService = CategoryService();
+  final _statsService = OrganizerStatisticsService();
 
   @override
   void initState() {
@@ -37,11 +44,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> _loadCategories() async {
-    final data = await supabase.from('event_categories').select('name');
-    setState(() {
-      _categories = data.map((e) => e['name'] as String).toList();
-      if (_categories.isNotEmpty) _selectedCategory = _categories.first;
-    });
+    try {
+      _categories = await _categoryService.getCategoryNames();
+      setState(() {
+        if (_categories.isNotEmpty) _selectedCategory = _categories.first;
+      });
+    } catch (e) {
+      // Use empty list if categories fail to load
+      setState(() => _categories = []);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -101,10 +112,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _selectedTime.minute,
       );
       
-      // Create event
+      // Create event using service
       final totalSeats = int.parse(_totalSeatsController.text);
-      await supabase.from('events').insert({
-        'organizer_id': userId,
+      await _eventService.createEvent({
         'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
         'category': _selectedCategory,
@@ -120,6 +130,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         'is_published': true,
         'status': 'upcoming',
       });
+      
+      // Update organizer statistics
+      try {
+        await _statsService.incrementEventCount(userId);
+      } catch (e) {
+        // Ignore statistics error
+      }
       
       if (!mounted) return;
       

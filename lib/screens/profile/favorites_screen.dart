@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
+import '../../services/favorite_service.dart';
 import '../../widgets/event_list_card.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -16,6 +17,8 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   List<EventModel> _favoriteEvents = [];
   bool _isLoading = true;
+  
+  final _favoriteService = FavoriteService();
 
   @override
   void initState() {
@@ -27,14 +30,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
-
-      final data = await supabase
-          .from('favorites')
-          .select('*, events(*)')
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
+      final data = await _favoriteService.getUserFavoritesWithEvents();
       
       setState(() {
         _favoriteEvents = data

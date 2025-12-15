@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
+import '../../services/notification_service.dart';
 import '../events/event_details_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -16,6 +17,8 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   List<Map<String, dynamic>> _notifications = [];
   bool _isLoading = true;
+  
+  final _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -27,17 +30,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
-
-      final data = await supabase
-          .from('notifications')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
+      final notifications = await _notificationService.getUserNotifications();
       
       setState(() {
-        _notifications = List<Map<String, dynamic>>.from(data);
+        _notifications = notifications.map((n) => {
+          'id': n.id,
+          'title': n.title,
+          'message': n.message,
+          'type': n.type,
+          'is_read': n.isRead,
+          'event_id': n.eventId,
+          'created_at': n.createdAt.toIso8601String(),
+        }).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -47,11 +51,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _markAsRead(String notificationId) async {
     try {
-      await supabase
-          .from('notifications')
-          .update({'is_read': true})
-          .eq('id', notificationId);
-      
+      await _notificationService.markAsRead(notificationId);
       _loadNotifications();
     } catch (e) {
       // Handle error
@@ -82,14 +82,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           if (_notifications.any((n) => !n['is_read']))
             TextButton(
               onPressed: () async {
-                final userId = supabase.auth.currentUser?.id;
-                if (userId != null) {
-                  await supabase
-                      .from('notifications')
-                      .update({'is_read': true})
-                      .eq('user_id', userId);
-                  _loadNotifications();
-                }
+                await _notificationService.markAllAsRead();
+                _loadNotifications();
               },
               child: const Text('Mark all as read'),
             ),
