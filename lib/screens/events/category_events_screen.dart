@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
+import '../../services/event_service.dart';
 import '../../widgets/event_list_card.dart';
 
 class CategoryEventsScreen extends StatefulWidget {
@@ -18,6 +19,8 @@ class CategoryEventsScreen extends StatefulWidget {
 class _CategoryEventsScreenState extends State<CategoryEventsScreen> {
   List<EventModel> _events = [];
   bool _isLoading = true;
+  
+  final _eventService = EventService();
 
   @override
   void initState() {
@@ -29,16 +32,8 @@ class _CategoryEventsScreenState extends State<CategoryEventsScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final data = await supabase
-          .from('events')
-          .select()
-          .eq('category', widget.category)
-          .eq('is_published', true)
-          .gte('event_date', DateTime.now().toIso8601String())
-          .order('event_date', ascending: true);
-      
+      _events = await _eventService.getEventsByCategory(widget.category);
       setState(() {
-        _events = data.map((e) => EventModel.fromJson(e)).toList();
         _isLoading = false;
       });
     } catch (e) {

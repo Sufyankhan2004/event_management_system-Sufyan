@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
+import '../../services/registration_service.dart';
+import '../../services/payment_service.dart';
 
 class OrganizerEventDetailsScreen extends StatefulWidget {
   final EventModel event;
@@ -18,6 +20,9 @@ class OrganizerEventDetailsScreen extends StatefulWidget {
 class _OrganizerEventDetailsScreenState extends State<OrganizerEventDetailsScreen> {
   List<Map<String, dynamic>> _registrations = [];
   bool _isLoading = true;
+  
+  final _registrationService = RegistrationService();
+  final _paymentService = PaymentService();
 
   @override
   void initState() {
@@ -29,6 +34,7 @@ class _OrganizerEventDetailsScreenState extends State<OrganizerEventDetailsScree
     setState(() => _isLoading = true);
     
     try {
+      // Load registrations with user details
       final data = await supabase
           .from('registrations')
           .select('*, profiles(full_name, phone)')

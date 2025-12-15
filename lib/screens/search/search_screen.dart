@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
+import '../../services/event_service.dart';
+import '../../services/category_service.dart';
 import '../../widgets/event_list_card.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -19,6 +21,9 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _isSearching = false;
   String? _selectedCategory;
   List<String> _categories = [];
+  
+  final _eventService = EventService();
+  final _categoryService = CategoryService();
 
   @override
   void initState() {
@@ -27,10 +32,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _loadCategories() async {
-    final data = await supabase.from('event_categories').select('name');
-    setState(() {
-      _categories = data.map((e) => e['name'] as String).toList();
-    });
+    try {
+      _categories = await _categoryService.getCategoryNames();
+      setState(() {});
+    } catch (e) {
+      // Handle error
+    }
   }
 
   Future<void> _searchEvents() async {
@@ -39,24 +46,22 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() => _isSearching = true);
     
     try {
-      var query = supabase
-          .from('events')
-          .select()
-          .eq('is_published', true)
-          .gte('event_date', DateTime.now().toIso8601String());
-
-      if (_searchController.text.isNotEmpty) {
-        query = query.or('title.ilike.%${_searchController.text}%,description.ilike.%${_searchController.text}%');
+      List<EventModel> results;
+      
+      if (_selectedCategory != null && _searchController.text.isEmpty) {
+        // Search by category only
+        results = await _eventService.getEventsByCategory(_selectedCategory!);
+      } else if (_searchController.text.isNotEmpty && _selectedCategory == null) {
+        // Search by text only
+        results = await _eventService.searchEvents(_searchController.text);
+      } else {
+        // Search by both text and category
+        final allResults = await _eventService.searchEvents(_searchController.text);
+        results = allResults.where((e) => e.category == _selectedCategory).toList();
       }
-
-      if (_selectedCategory != null) {
-        query = query.eq('category', _selectedCategory!);
-      }
-
-      final data = await query.order('event_date', ascending: true);
       
       setState(() {
-        _searchResults = data.map((e) => EventModel.fromJson(e)).toList();
+        _searchResults = results;
         _isSearching = false;
       });
     } catch (e) {
