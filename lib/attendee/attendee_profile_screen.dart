@@ -10,6 +10,11 @@ import '../services/auth_service.dart';
 import '../models/user_profile.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/profile/favorites_screen.dart';
+import '../screens/profile/edit_profile_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
+import '../screens/settings/settings_screen.dart';
+import '../screens/support/help_support_screen.dart';
+import '../screens/support/about_screen.dart';
 
 class AttendeeProfileScreen extends StatefulWidget {
   const AttendeeProfileScreen({super.key});
@@ -147,6 +152,20 @@ class _AttendeeProfileScreenState extends State<AttendeeProfileScreen> {
                   
                   // Menu Items
                   _buildMenuItem(
+                    icon: Icons.edit_outlined,
+                    title: 'Edit Profile',
+                    onTap: () async {
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const EditProfileScreen(),
+                        ),
+                      );
+                      if (result == true) {
+                        _loadProfile();
+                      }
+                    },
+                  ),
+                  _buildMenuItem(
                     icon: Icons.favorite_outline,
                     title: 'Favorites',
                     onTap: () {
@@ -158,24 +177,47 @@ class _AttendeeProfileScreenState extends State<AttendeeProfileScreen> {
                     },
                   ),
                   _buildMenuItem(
+                    icon: Icons.notifications_outlined,
+                    title: 'Notifications',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildMenuItem(
                     icon: Icons.settings_outlined,
                     title: 'Settings',
                     onTap: () {
-                      // Navigate to settings
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.help_outline,
                     title: 'Help & Support',
                     onTap: () {
-                      // Navigate to help
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.info_outline,
                     title: 'About',
                     onTap: () {
-                      // Navigate to about
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AboutScreen(),
+                        ),
+                      );
                     },
                   ),
                   const Divider(height: 32),

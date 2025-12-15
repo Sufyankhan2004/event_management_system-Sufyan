@@ -35,11 +35,13 @@ class AuthService {
     );
     
     if (response.user != null) {
-      // Update profile with role
-      await supabase.from('profiles').update({
+      // Insert or update profile with role and phone
+      await supabase.from('profiles').upsert({
+        'id': response.user!.id,
+        'full_name': fullName,
         'phone': phone,
         'role': role,
-      }).eq('id', response.user!.id);
+      });
       
       return await getUserProfile(response.user!.id);
     }
@@ -53,7 +55,9 @@ class AuthService {
           .from('profiles')
           .select()
           .eq('id', userId)
-          .single();
+          .maybeSingle();
+      
+      if (data == null) return null;
       return UserProfile.fromJson(data);
     } catch (e) {
       return null;

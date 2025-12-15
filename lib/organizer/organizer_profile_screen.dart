@@ -9,6 +9,10 @@ import '../config/app_theme.dart';
 import '../services/auth_service.dart';
 import '../models/user_profile.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/profile/edit_profile_screen.dart';
+import '../screens/settings/settings_screen.dart';
+import '../screens/support/help_support_screen.dart';
+import '../screens/support/about_screen.dart';
 
 class OrganizerProfileScreen extends StatefulWidget {
   const OrganizerProfileScreen({super.key});
@@ -146,38 +150,72 @@ class _OrganizerProfileScreenState extends State<OrganizerProfileScreen> {
                   
                   // Menu Items
                   _buildMenuItem(
+                    icon: Icons.edit_outlined,
+                    title: 'Edit Profile',
+                    onTap: () async {
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const EditProfileScreen(),
+                        ),
+                      );
+                      if (result == true) {
+                        _loadProfile();
+                      }
+                    },
+                  ),
+                  _buildMenuItem(
                     icon: Icons.analytics_outlined,
                     title: 'Analytics',
                     onTap: () {
-                      // Navigate to analytics
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Analytics feature coming soon!'),
+                        ),
+                      );
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.qr_code_scanner,
                     title: 'Scan QR Code',
                     onTap: () {
-                      // Navigate to QR scanner
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('QR Scanner feature coming soon!'),
+                        ),
+                      );
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.settings_outlined,
                     title: 'Settings',
                     onTap: () {
-                      // Navigate to settings
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.help_outline,
                     title: 'Help & Support',
                     onTap: () {
-                      // Navigate to help
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.info_outline,
                     title: 'About',
                     onTap: () {
-                      // Navigate to about
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AboutScreen(),
+                        ),
+                      );
                     },
                   ),
                   const Divider(height: 32),
