@@ -25,8 +25,10 @@ class RegistrationService extends BaseService {
       final userId = currentUserId;
       if (userId == null) throw Exception('User not authenticated');
       
-      // Generate unique ticket code and QR data
-      final ticketCode = _uuid.v4().substring(0, 8).toUpperCase();
+      // Generate unique ticket code using timestamp + random UUID segment for consistency
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final randomPart = _uuid.v4().substring(0, 6);
+      final ticketCode = '$timestamp-$randomPart'.toUpperCase();
       final qrCodeData = 'EVENT:$eventId|USER:$userId|TICKET:$ticketCode';
       
       // Check if seats are available

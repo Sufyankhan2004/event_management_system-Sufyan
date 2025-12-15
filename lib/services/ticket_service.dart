@@ -27,7 +27,10 @@ class TicketService extends BaseService {
       final tickets = <TicketModel>[];
       
       for (int i = 0; i < numberOfTickets; i++) {
-        final ticketCode = _uuid.v4().substring(0, 10).toUpperCase();
+        // Generate unique ticket code using timestamp + random UUID segment
+        final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+        final randomPart = _uuid.v4().substring(0, 6);
+        final ticketCode = '$timestamp-$randomPart'.toUpperCase();
         final qrCodeData = 'TICKET:$ticketCode|EVENT:$eventId|USER:$userId';
         
         final ticketData = {

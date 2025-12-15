@@ -154,15 +154,21 @@ class PaymentService extends BaseService {
         paymentGateway: paymentGateway,
       );
       
-      // Simulate payment processing
-      // In a real application, this would integrate with a payment gateway
-      // like Stripe, PayPal, Razorpay, etc.
+      // ⚠️ MOCK PAYMENT IMPLEMENTATION - NOT FOR PRODUCTION USE
+      // TODO: Integrate with real payment gateway (Stripe, PayPal, Razorpay, etc.)
+      // 
+      // Production implementation should:
+      // 1. Call payment gateway API
+      // 2. Validate payment response
+      // 3. Handle payment failures
+      // 4. Process refunds if needed
+      // 5. Store transaction details securely
       
-      // For now, mark as completed (this is just a mock)
+      // For now, automatically mark as completed (DEVELOPMENT/TESTING ONLY)
       final completedPayment = await updatePaymentStatus(
         payment.id,
         'completed',
-        transactionId: 'TXN${DateTime.now().millisecondsSinceEpoch}',
+        transactionId: 'MOCK-TXN-${DateTime.now().millisecondsSinceEpoch}',
       );
       
       return completedPayment;

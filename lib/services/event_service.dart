@@ -92,13 +92,19 @@ class EventService extends BaseService {
   // Get events by category
   Future<List<EventModel>> getEventsByCategory(String category, {int? limit}) async {
     try {
-      final data = await query(
-        filters: {'category': category, 'is_published': true},
-        orderBy: 'event_date',
-        ascending: true,
-        limit: limit,
-      );
-      return data.map((json) => EventModel.fromJson(json)).toList();
+      final now = DateTime.now().toIso8601String();
+      final response = await client
+          .from(tableName)
+          .select()
+          .eq('category', category)
+          .eq('is_published', true)
+          .gte('event_date', now)
+          .order('event_date', ascending: true)
+          .limit(limit ?? 50);
+      
+      return List<Map<String, dynamic>>.from(response)
+          .map((json) => EventModel.fromJson(json))
+          .toList();
     } catch (e) {
       throw Exception('Failed to get events by category: ${e.toString()}');
     }
