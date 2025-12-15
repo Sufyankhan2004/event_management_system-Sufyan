@@ -7,6 +7,9 @@ import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
 import '../../models/user_profile.dart';
+import '../../services/user_service.dart';
+import '../../services/event_service.dart';
+import '../../services/registration_service.dart';
 import '../tickets/ticket_screen.dart';
 import 'organizer_event_details_screen.dart';
 
@@ -24,6 +27,10 @@ class _MyEventsScreenState extends State<MyEventsScreen>
   List<EventModel> _myCreatedEvents = [];
   bool _isLoading = true;
   UserProfile? _userProfile;
+  
+  final _userService = UserService();
+  final _eventService = EventService();
+  final _registrationService = RegistrationService();
 
   @override
   void initState() {
@@ -40,14 +47,9 @@ class _MyEventsScreenState extends State<MyEventsScreen>
       if (userId == null) return;
 
       // Load user profile
-      final profileData = await supabase
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
-      _userProfile = UserProfile.fromJson(profileData);
+      _userProfile = await _userService.getUserProfile(userId);
 
-      // Load registered events
+      // Load registered events with event details
       final registrationsData = await supabase
           .from('registrations')
           .select('*, events(*)')
@@ -58,13 +60,7 @@ class _MyEventsScreenState extends State<MyEventsScreen>
 
       // Load created events if organizer
       if (_userProfile?.role == 'organizer') {
-        final eventsData = await supabase
-            .from('events')
-            .select()
-            .eq('organizer_id', userId)
-            .order('created_at', ascending: false);
-        
-        _myCreatedEvents = eventsData.map((e) => EventModel.fromJson(e)).toList();
+        _myCreatedEvents = await _eventService.getMyEvents();
       }
 
       setState(() => _isLoading = false);

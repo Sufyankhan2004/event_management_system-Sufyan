@@ -7,6 +7,9 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
+import '../../services/event_service.dart';
+import '../../services/favorite_service.dart';
+import '../../services/registration_service.dart';
 import 'event_registration_screen.dart';
 
 // ================================
@@ -29,6 +32,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isFavorite = false;
   bool _isRegistered = false;
   List<Map<String, dynamic>> _reviews = [];
+  
+  final _eventService = EventService();
+  final _favoriteService = FavoriteService();
+  final _registrationService = RegistrationService();
 
   @override
   void initState() {
@@ -41,36 +48,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     
     try {
       // Load event
-      final eventData = await supabase
-          .from('events')
-          .select()
-          .eq('id', widget.eventId)
-          .single();
+      _event = await _eventService.getEvent(widget.eventId);
       
-      _event = EventModel.fromJson(eventData);
+      if (_event == null) {
+        throw Exception('Event not found');
+      }
       
       // Check if favorited
+      _isFavorite = await _favoriteService.isFavorite(widget.eventId);
+      
+      // Check if registered
       final userId = supabase.auth.currentUser?.id;
-      if (userId != null) {
-        final favoriteData = await supabase
-            .from('favorites')
-            .select()
-            .eq('event_id', widget.eventId)
-            .eq('user_id', userId)
-            .maybeSingle();
-        
-        _isFavorite = favoriteData != null;
-        
-        // Check if registered
-        final registrationData = await supabase
-            .from('registrations')
-            .select()
-            .eq('event_id', widget.eventId)
-            .eq('user_id', userId)
-            .maybeSingle();
-        
-        _isRegistered = registrationData != null;
-      }
+      _isRegistered = userId != null 
+          ? await _registrationService.isUserRegistered(widget.eventId, userId)
+          : false;
       
       // Load reviews
       final reviewsData = await supabase
@@ -94,24 +85,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Future<void> _toggleFavorite() async {
-    final userId = supabase.auth.currentUser?.id;
-    if (userId == null) return;
-    
     try {
-      if (_isFavorite) {
-        await supabase
-            .from('favorites')
-            .delete()
-            .eq('event_id', widget.eventId)
-            .eq('user_id', userId);
-      } else {
-        await supabase.from('favorites').insert({
-          'event_id': widget.eventId,
-          'user_id': userId,
-        });
-      }
-      
-      setState(() => _isFavorite = !_isFavorite);
+      final newState = await _favoriteService.toggleFavorite(widget.eventId);
+      setState(() => _isFavorite = newState);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

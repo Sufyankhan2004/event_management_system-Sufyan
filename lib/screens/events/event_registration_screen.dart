@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:uuid/uuid.dart';
-import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/event.dart';
+import '../../services/registration_service.dart';
+import '../../services/ticket_service.dart';
+import '../../services/notification_service.dart';
+import '../../services/payment_service.dart';
 import '../tickets/ticket_screen.dart';
 
 class EventRegistrationScreen extends StatefulWidget {
@@ -21,6 +23,11 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
   int _numberOfTickets = 1;
   String _paymentMethod = 'Credit Card';
   bool _isProcessing = false;
+  
+  final _registrationService = RegistrationService();
+  final _ticketService = TicketService();
+  final _notificationService = NotificationService();
+  final _paymentService = PaymentService();
 
   double get _totalAmount => widget.event.ticketPrice * _numberOfTickets;
 
@@ -38,45 +45,36 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) throw Exception('User not authenticated');
 
-      // Generate unique ticket code
-      final ticketCode = const Uuid().v4().substring(0, 8).toUpperCase();
-      
-      // Create QR code data
-      final qrCodeData = jsonEncode({
-        'eventId': widget.event.id,
-        'userId': userId,
-        'ticketCode': ticketCode,
-        'numberOfTickets': _numberOfTickets,
-      });
-
       // Create registration
-      await supabase.from('registrations').insert({
-        'event_id': widget.event.id,
-        'user_id': userId,
-        'ticket_code': ticketCode,
-        'qr_code_data': qrCodeData,
-        'number_of_tickets': _numberOfTickets,
-        'total_amount': _totalAmount,
-        'payment_status': 'completed',
-        'payment_method': _paymentMethod,
-      });
+      final registration = await _registrationService.createRegistration(
+        eventId: widget.event.id,
+        numberOfTickets: _numberOfTickets,
+        totalAmount: _totalAmount,
+        paymentStatus: 'completed',
+      );
 
-      // Update available seats
-      await supabase
-          .from('events')
-          .update({
-            'available_seats': widget.event.availableSeats - _numberOfTickets,
-          })
-          .eq('id', widget.event.id);
+      // Process payment
+      await _paymentService.processPayment(
+        registrationId: registration.id,
+        eventId: widget.event.id,
+        amount: _totalAmount,
+        paymentMethod: _paymentMethod,
+      );
 
-      // Create notification
-      await supabase.from('notifications').insert({
-        'user_id': userId,
-        'title': 'Registration Successful',
-        'message': 'You have successfully registered for ${widget.event.title}',
-        'type': 'registration',
-        'related_event_id': widget.event.id,
-      });
+      // Generate tickets
+      await _ticketService.generateTickets(
+        registrationId: registration.id,
+        eventId: widget.event.id,
+        numberOfTickets: _numberOfTickets,
+        pricePerTicket: widget.event.ticketPrice,
+      );
+
+      // Send confirmation notification
+      await _notificationService.sendRegistrationConfirmation(
+        userId: userId,
+        eventId: widget.event.id,
+        eventTitle: widget.event.title,
+      );
 
       if (!mounted) return;
 
@@ -85,7 +83,7 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
         MaterialPageRoute(
           builder: (context) => TicketScreen(
             eventId: widget.event.id,
-            ticketCode: ticketCode,
+            ticketCode: registration.ticketCode,
           ),
         ),
       );

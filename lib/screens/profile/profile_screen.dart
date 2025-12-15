@@ -4,6 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
 import '../../models/user_profile.dart';
+import '../../services/user_service.dart';
+import '../../services/registration_service.dart';
+import '../../services/favorite_service.dart';
+import '../../services/event_service.dart';
 import '../auth/login_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'favorites_screen.dart';
@@ -21,6 +25,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _registeredCount = 0;
   int _favoritesCount = 0;
   int _createdEventsCount = 0;
+  
+  final _userService = UserService();
+  final _registrationService = RegistrationService();
+  final _favoriteService = FavoriteService();
+  final _eventService = EventService();
 
   @override
   void initState() {
@@ -36,34 +45,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (userId == null) return;
 
       // Load profile
-      final profileData = await supabase
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
-      
-      _profile = UserProfile.fromJson(profileData);
+      _profile = await _userService.getUserProfile(userId);
 
       // Load stats
-      final registrations = await supabase
-          .from('registrations')
-          .select('id')
-          .eq('user_id', userId);
-      
-      final favorites = await supabase
-          .from('favorites')
-          .select('id')
-          .eq('user_id', userId);
+      final registrations = await _registrationService.getUserRegistrations(userId);
+      final favorites = await _favoriteService.getUserFavorites();
 
       _registeredCount = registrations.length;
       _favoritesCount = favorites.length;
 
       if (_profile?.role == 'organizer') {
-        final events = await supabase
-            .from('events')
-            .select('id')
-            .eq('organizer_id', userId);
-        
+        final events = await _eventService.getMyEvents();
         _createdEventsCount = events.length;
       }
 

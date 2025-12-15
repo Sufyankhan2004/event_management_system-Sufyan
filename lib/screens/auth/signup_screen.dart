@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_theme.dart';
 import '../../config/supabase_config.dart';
+import '../../services/user_service.dart';
+import '../../services/organizer_statistics_service.dart';
 import '../home/main_screen.dart';
 
 // ================================
@@ -25,6 +27,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   String _selectedRole = 'user';
+  
+  final _userService = UserService();
+  final _statsService = OrganizerStatisticsService();
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -42,10 +47,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       if (response.user != null) {
         // Update profile with additional data
-        await supabase.from('profiles').update({
+        await _userService.updateUserProfile(response.user!.id, {
           'phone': _phoneController.text.trim(),
           'role': _selectedRole,
-        }).eq('id', response.user!.id);
+        });
+        
+        // Initialize organizer statistics if role is organizer
+        if (_selectedRole == 'organizer') {
+          try {
+            await _statsService.initializeStatistics(response.user!.id);
+          } catch (e) {
+            // Ignore if stats initialization fails
+          }
+        }
       }
       
       if (!mounted) return;
